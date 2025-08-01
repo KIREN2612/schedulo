@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from core.scheduler import generate_schedule
+from app.models import Task, db
 
 main = Blueprint('main', __name__)
 
@@ -9,28 +10,51 @@ def ping():
 
 @main.route('/tasks', methods=['GET'])
 def get_tasks():
-    tasks = current_app.config['TASKS_STORE']
-    return jsonify({"tasks": tasks}), 200
+    tasks = Task.query.all()
+    tasks_list = [ 
+        {
+            "id": task.id,
+            "title": task.title,
+            "estimated_time": task.estimated_time,
+            "priority": task.priority,
+            "deadline": task.deadline,
+        } for task in tasks
+    ]
+    return jsonify({"tasks": tasks_list}), 200
 
 @main.route('/tasks', methods=['POST'])
 def add_task():
-    task = request.get_json()
+    data = request.get_json()
     required_fields = {'title', 'estimated_time', 'priority'}
 
-    if not all(field in task for field in required_fields):
+    if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required task fields"}), 400
 
-    current_app.config['TASKS_STORE'].append(task)
-    return jsonify({"message": "Task added", "task": task}), 201
+    new_task = Task(
+        title=data['title'],
+        estimated_time=data['estimated_time'],
+        priority=data['priority'],
+        deadline=data.get('deadline')
+    )
 
-@main.route('/tasks/<string:title>', methods=['DELETE'])
-def delete_task(title):
-    tasks = current_app.config['TASKS_STORE']
-    task_to_delete = next((t for t in tasks if t['title'] == title), None)
+    db.session.add(new_task)
+    db.session.commit()
 
-    if task_to_delete:
-        tasks.remove(task_to_delete)
-        return jsonify({"message": f"Task '{title}' deleted"}), 200
+    return jsonify({"message": "Task added", "task": {
+        "id": new_task.id,
+        "title": new_task.title,
+        "estimated_time": new_task.estimated_time,
+        "priority": new_task.priority,
+        "deadline": new_task.deadline
+    }}), 201
+
+@main.route('/tasks/<int:id>', methods=['DELETE'])
+def delete_task(id):
+    task = Task.query.get(id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({"message": f"Task with id {id} deleted"}), 200
     else:
         return jsonify({"error": "Task not found"}), 404
 
@@ -41,9 +65,17 @@ def generate():
         tasks = data.get('tasks')
         available_time = data.get('available_time', 0)
 
-        # If no tasks passed, use stored tasks
+        # If no tasks passed, fetch from DB
         if not tasks:
-            tasks = current_app.config['TASKS_STORE']
+            all_tasks = Task.query.all()
+            tasks = [
+                {
+                    "title": t.title,
+                    "estimated_time": t.estimated_time,
+                    "priority": t.priority,
+                    "deadline": t.deadline,
+                } for t in all_tasks
+            ]
 
         if not isinstance(tasks, list) or not isinstance(available_time, int):
             return jsonify({"error": "Invalid input format"}), 400
