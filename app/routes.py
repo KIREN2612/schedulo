@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app,render_template
 from core.scheduler import generate_schedule
 from app.models import Task, db
+from datetime import datetime,timedelta
 
 main = Blueprint('main', __name__)
 
@@ -89,3 +90,40 @@ def generate():
 @main.route('/')
 def index():
     return render_template('index.html')
+
+@main.route('/stats', methods=['GET'])
+def stats():
+    tasks = Task.query.all()
+
+    total_tasks = len(tasks)
+    priority_counts = {
+        'High': sum(1 for t in tasks if t.priority == 1),
+        'Medium': sum(1 for t in tasks if t.priority == 2),
+        'Low': sum(1 for t in tasks if t.priority == 3),
+    }
+
+    # XP: 10 points per task
+    xp = total_tasks * 10
+
+    # Streak (based on days with tasks)
+    today = datetime.today().date()
+    dates = set()
+    for task in tasks:
+        if task.deadline:
+            try:
+                task_date = datetime.strptime(task.deadline, "%Y-%m-%d").date()
+                dates.add(task_date)
+            except:
+                continue
+    streak = 0
+    current = today
+    while current in dates:
+        streak += 1
+        current -= timedelta(days=1)
+
+    return jsonify({
+        'total_tasks': total_tasks,
+        'priority_counts': priority_counts,
+        'xp': xp,
+        'streak': streak
+    }), 200
