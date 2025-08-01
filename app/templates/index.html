@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schedulo</title>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+    <h1>Schedulo</h1>
+
+    <h2>Add Task</h2>
+    <form id="taskForm">
+        <input type="text" id="title" placeholder="Title" required>
+        <input type="number" id="estimated_time" placeholder="Time (min)" required>
+        <input type="number" id="priority" placeholder="Priority" required>
+        <input type="date" id="deadline" placeholder="Deadline">
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h2>Tasks</h2>
+    <ul id="taskList"></ul>
+
+    <h2>Schedule</h2>
+    <button onclick="generateSchedule()">Generate Schedule</button>
+    <ul id="scheduleList"></ul>
+</body>
+</html>

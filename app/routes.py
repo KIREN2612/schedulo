@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app,render_template
 from core.scheduler import generate_schedule
 from app.models import Task, db
 
@@ -85,3 +85,7 @@ def generate():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@main.route('/')
+def index():
+    return render_template('index.html')
