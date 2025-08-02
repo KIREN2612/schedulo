@@ -2,82 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Schedulo – Task Scheduler</title>
+    <title>Schedulo – Dynamic Task Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #e0f7fa;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #ffa726;
-            color: white;
-            padding: 1rem 2rem;
-            text-align: center;
-        }
-        .container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 1.5rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #0077b6;
-            margin-top: 2rem;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.7rem;
-            margin-bottom: 2rem;
-        }
-        input, button {
-            padding: 0.7rem;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 1rem;
-        }
-        button {
-            background-color: #0077b6;
-            color: white;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background-color: #005f8a;
-        }
-        .task-list, .schedule {
-            margin-top: 1rem;
-        }
-        .task-card {
-            background: #f1f8ff;
-            border-left: 5px solid #0077b6;
-            padding: 0.8rem;
-            margin-bottom: 0.5rem;
-            border-radius: 8px;
-        }
-        #dashboard {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 1.5rem;
-            background: #f5faff;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-        }
-        .progress-container {
-            margin: 1rem 0;
-        }
-        progress {
-            width: 100%;
-            height: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <header>
@@ -85,42 +13,81 @@
     </header>
 
     <div class="container">
-        <h2>Add Task</h2>
-        <form id="task-form">
-            <input type="text" id="title" placeholder="Task Title" required>
-            <input type="number" id="estimated_time" placeholder="Estimated Time (minutes)" required>
-            <input type="number" id="priority" placeholder="Priority (1=High, 2=Medium, 3=Low)" required>
-            <input type="date" id="deadline">
-            <button type="submit">Add Task</button>
-        </form>
+        <!-- Left Main Panel -->
+        <div class="main-panel">
+            <!-- Add Task Section -->
+            <div class="card">
+                <h2>Add Task</h2>
+                <form id="task-form">
+                    <input type="text" id="title" placeholder="Task Title" required>
+                    <input type="number" id="estimated_time" placeholder="Estimated Time (minutes)" required>
+                    <input type="number" id="priority" placeholder="Priority (1=High, 2=Medium, 3=Low)" required>
+                    <input type="date" id="deadline">
+                    <button type="submit">Add Task</button>
+                </form>
+            </div>
 
-        <h2>Task List</h2>
-        <div class="task-list" id="task-list"></div>
+            <!-- Task List Section -->
+            <div class="card">
+                <h2>Task List</h2>
+                <div class="task-grid" id="task-list"></div>
+            </div>
 
-        <h2>Generate Schedule</h2>
-        <form id="schedule-form">
-            <input type="number" id="available_time" placeholder="Available time today (minutes)">
-            <button type="submit">Generate</button>
-        </form>
-        <div class="schedule" id="schedule"></div>
-    </div>
-
-    <section id="dashboard">
-        <h2 style="color: #4b89dc;">📊 Your Productivity Dashboard</h2>
-
-        <p>Total Tasks: <span id="total-tasks">0</span></p>
-        <p>XP Points: <span id="xp">0</span></p>
-        <p>Streak: <span id="streak">0</span> 🔥</p>
-
-        <div class="progress-container">
-            <label>XP Progress:</label>
-            <progress id="xp-bar" value="0" max="100"></progress>
+            <!-- Generate Schedule Section -->
+            <div class="card">
+                <h2>Generate Schedule</h2>
+                <form id="schedule-form">
+                    <input type="number" id="available_time" placeholder="Available time today (minutes)">
+                    <button type="submit">Generate</button>
+                </form>
+                <div class="schedule" id="schedule"></div>
+            </div>
         </div>
 
-        <canvas id="priority-chart" width="300" height="300"></canvas>
-    </section>
+        <!-- Right Side Panel -->
+        <div class="side-panel">
+            <!-- Stats Section -->
+            <div class="card">
+                <h2>📊 Productivity Dashboard</h2>
+                <p>Total Tasks: <span id="total-tasks">0</span></p>
+                <p>XP Points: <span id="xp">0</span></p>
+                <p>Streak: <span id="streak">0</span> 🔥</p>
+                <div class="progress-container">
+                    <label>XP Progress:</label>
+                    <progress id="xp-bar" value="0" max="100"></progress>
+                </div>
+            </div>
 
-    <!-- JavaScript must be at the end -->
+            <!-- Pie Chart Section -->
+            <div class="card">
+                <h2>🎯 Priority Chart</h2>
+                <canvas id="priority-chart" width="300" height="300"></canvas>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="card">
+                <h2>📆 Timeline</h2>
+                <div id="timeline">
+                    <!-- Timeline updates dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Focus Mode Modal -->
+    <div id="focus-modal" class="modal hidden">
+        <div class="modal-content">
+    <h2 id="focus-task-title">🧘 Focus Mode</h2>
+    <p>Time left: <span id="countdown">00:00</span></p>
+    <div id="feedback-buttons" class="hidden">
+        <p>✅ Did you finish the task?</p>
+        <button onclick="submitFocusFeedback(true)">Yes</button>
+        <button onclick="submitFocusFeedback(false)">No</button>
+    </div>
+    <button class="close-btn" onclick="closeFocusModal()">✖</button>
+    </div>
+</div>
+
+
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

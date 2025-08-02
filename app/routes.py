@@ -1,13 +1,27 @@
-from flask import Blueprint, jsonify, request, current_app,render_template
+from flask import Blueprint, jsonify, request, render_template
 from core.scheduler import generate_schedule
 from app.models import Task, db
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
+
+# ────────────────────────────────
+# 🔄 Basic Routes
+# ────────────────────────────────
 
 @main.route('/ping', methods=['GET'])
 def ping():
     return jsonify({"message": "pong"})
+
+
+@main.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
+
+
+# ────────────────────────────────
+# 📋 Task CRUD Endpoints
+# ────────────────────────────────
 
 @main.route('/tasks', methods=['GET'])
 def get_tasks():
@@ -21,7 +35,8 @@ def get_tasks():
             "deadline": task.deadline,
         } for task in tasks
     ]
-    return jsonify({"tasks": tasks_list}), 200
+    return jsonify(tasks_list), 200
+
 
 @main.route('/tasks', methods=['POST'])
 def add_task():
@@ -41,13 +56,17 @@ def add_task():
     db.session.add(new_task)
     db.session.commit()
 
-    return jsonify({"message": "Task added", "task": {
-        "id": new_task.id,
-        "title": new_task.title,
-        "estimated_time": new_task.estimated_time,
-        "priority": new_task.priority,
-        "deadline": new_task.deadline
-    }}), 201
+    return jsonify({
+        "message": "Task added",
+        "task": {
+            "id": new_task.id,
+            "title": new_task.title,
+            "estimated_time": new_task.estimated_time,
+            "priority": new_task.priority,
+            "deadline": new_task.deadline
+        }
+    }), 201
+
 
 @main.route('/tasks/<int:id>', methods=['DELETE'])
 def delete_task(id):
@@ -56,8 +75,12 @@ def delete_task(id):
         db.session.delete(task)
         db.session.commit()
         return jsonify({"message": f"Task with id {id} deleted"}), 200
-    else:
-        return jsonify({"error": "Task not found"}), 404
+    return jsonify({"error": "Task not found"}), 404
+
+
+# ────────────────────────────────
+# 📆 Schedule Generator
+# ────────────────────────────────
 
 @main.route('/generate_schedule', methods=['POST'])
 def generate():
@@ -87,9 +110,46 @@ def generate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@main.route('/')
-def index():
-    return render_template('index.html')
+
+@main.route('/current_schedule', methods=['GET'])
+def current_schedule():
+    tasks = Task.query.order_by(Task.priority).all()
+    result = [
+        {
+            "title": task.title,
+            "allocated_time": task.estimated_time
+        } for task in tasks
+    ]
+    return jsonify({"schedule": result})
+
+
+# ────────────────────────────────
+# 🔁 Schedule Adjustments
+# ────────────────────────────────
+
+@main.route('/reschedule_task/<title>', methods=['POST'])
+def reschedule_task(title):
+    task = Task.query.filter_by(title=title).first()
+    if task:
+        task.deadline = (task.deadline or datetime.today().date()) + timedelta(days=1)
+        db.session.commit()
+        return jsonify({"message": "Rescheduled"}), 200
+    return jsonify({"error": "Task not found"}), 404
+
+
+@main.route('/remove_task_from_schedule/<title>', methods=['DELETE'])
+def remove_task_from_schedule(title):
+    task = Task.query.filter_by(title=title).first()
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({"message": "Removed"}), 200
+    return jsonify({"error": "Task not found"}), 404
+
+
+# ────────────────────────────────
+# 📊 Statistics API
+# ────────────────────────────────
 
 @main.route('/stats', methods=['GET'])
 def stats():
@@ -97,15 +157,13 @@ def stats():
 
     total_tasks = len(tasks)
     priority_counts = {
-        'High': sum(1 for t in tasks if t.priority == 1),
-        'Medium': sum(1 for t in tasks if t.priority == 2),
-        'Low': sum(1 for t in tasks if t.priority == 3),
+        1: sum(1 for t in tasks if t.priority == 1),
+        2: sum(1 for t in tasks if t.priority == 2),
+        3: sum(1 for t in tasks if t.priority == 3),
     }
 
-    # XP: 10 points per task
     xp = total_tasks * 10
 
-    # Streak (based on days with tasks)
     today = datetime.today().date()
     dates = set()
     for task in tasks:
