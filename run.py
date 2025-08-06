@@ -57,12 +57,7 @@ def main():
         print("=" * 60)
         
         # Start the development server
-        app.run(
-            host='127.0.0.1',
-            port=5000,
-            debug=True,
-            use_reloader=True
-        )
+        app.run(host='0.0.0.0', port=5000, debug=True)
         
     except ImportError as e:
         print(f"❌ Import Error: {e}")
