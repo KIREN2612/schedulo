@@ -4,13 +4,23 @@ Schedulo is a full-stack Python-based web application built with Flask and moder
 
 ---
 
+## 📸 UI Preview
+
+### 🖼️ Dashboard View
+![Dashboard Screenshot](assets/Screenshot_1.jpeg)
+
+### 🖼️ Analytics or Task View
+![Analytics Screenshot](assets/Screenshot_2.jpeg)
+
+---
+
 ## 🚀 Features
 
-- ✅ Modular Flask backend with Blueprints
-- 📊 Task tracking and scheduling
-- 📈 Analytics and productivity insights
-- 🔄 RESTful API integration with JavaScript `fetch()`
-- 🧩 Scalable project structure for future expansion
+- ✅ Modular Flask backend with Blueprints  
+- 📊 Task tracking and scheduling  
+- 📈 Analytics and productivity insights  
+- 🔄 RESTful API integration with JavaScript `fetch()`  
+- 🧩 Scalable project structure for future expansion  
 
 ---
 
@@ -126,4 +136,5 @@ Made with ❤️ using Flask and vanilla JS.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+````
 
