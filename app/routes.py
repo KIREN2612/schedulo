@@ -39,14 +39,14 @@ def index():
     low_priority = sum(1 for t in active_tasks if t.priority == 3)
     
     return render_template('index.html', 
-                         user_stats=user_stats,
-                         active_tasks=active_tasks,
-                         completed_tasks=completed_tasks,
-                         overdue_tasks=overdue_tasks,
-                         high_priority_count=high_priority,
-                         medium_priority_count=medium_priority,
-                         low_priority_count=low_priority,
-                         total_tasks=len(active_tasks) + len(completed_tasks))
+                        user_stats=user_stats,
+                        active_tasks=active_tasks,
+                        completed_tasks=completed_tasks,
+                        overdue_tasks=overdue_tasks,
+                        high_priority_count=high_priority,
+                        medium_priority_count=medium_priority,
+                        low_priority_count=low_priority,
+                        total_tasks=len(active_tasks) + len(completed_tasks))
 
 
 # ────────────────────────────────
