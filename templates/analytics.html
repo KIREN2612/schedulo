@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - TaskFlow Pro{% endblock %}
+
+{% block content %}
+<div class="analytics">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
+        <p>Track your productivity and progress over time</p>
+    </div>
+
+    <!-- Weekly Comparison -->
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-week"></i> Weekly Progress</h3>
+            </div>
+            <div class="card-content">
+                <div class="week-comparison">
+                    <div class="week-stat">
+                        <div class="week-label">This Week</div>
+                        <div class="week-value current-week">{{ this_week }}</div>
+                        <div class="week-subtitle">Tasks Completed</div>
+                    </div>
+                    
+                    <div class="comparison-arrow">
+                        {% if this_week > last_week %}
+                        <i class="fas fa-arrow-up trend-up"></i>
+                        <span class="trend-text trend-up">+{{ this_week - last_week }}</span>
+                        {% elif this_week < last_week %}
+                        <i class="fas fa-arrow-down trend-down"></i>
+                        <span class="trend-text trend-down">-{{ last_week - this_week }}</span>
+                        {% else %}
+                        <i class="fas fa-equals trend-equal"></i>
+                        <span class="trend-text trend-equal">0</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="week-stat">
+                        <div class="week-label">Last Week</div>
+                        <div class="week-value last-week">{{ last_week }}</div>
+                        <div class="week-subtitle">Tasks Completed</div>
+                    </div>
+                </div>
+                
+                <div class="progress-insight">
+                    {% if this_week > last_week %}
+                    <div class="insight-item positive">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>Great job! You're {{ ((this_week - last_week) / last_week * 100) | round(1) if last_week > 0 else 'infinitely' }}% more productive this week!</span>
+                    </div>
+                    {% elif this_week < last_week %}
+                    <div class="insight-item negative">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Room for improvement. Try to match last week's performance!</span>
+                    </div>
+                    {% else %}
+                    <div class="insight-item neutral">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Consistent performance. Keep it up!</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Progress Chart -->
+        <div class="analytics-card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-bar"></i> Daily Completion Chart</h3>
+            </div>
+            <div class="card-content">
+                <div class="chart-container">
+                    <canvas id="dailyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement Section -->
+    <div class="achievements-section">
+        <div class="section-header">
+            <h2><i class="fas fa-trophy"></i> Achievements & Rewards</h2>
+        </div>
+        
+        <div class="achievements-grid">
+            <div class="achievement-card {% if this_week >= 5 %}unlocked{% else %}locked{% endif %}">
+                <div class="achievement-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="achievement-content">
+                    <h4>Week Warrior</h4>
+                    <p>Complete 5+ tasks in a week</p>
+                    <div class="achievement-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (this_week / 5 * 100) | round(0) if this_week < 5 else 100 }}%"></div>
+                        </div>
+                        <span class="progress-text">{{ this_week }}/5</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="achievement-card {% if this_week >= 10 %}unlocked{% else %}locked{% endif %}">
+                <div class="achievement-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="achievement-content">
+                    <h4>Productivity King</h4>
+                    <p>Complete 10+ tasks in a week</p>
+                    <div class="achievement-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ (this_week / 10 * 100) | round(0) if this_week < 10 else 100 }}%"></div>
+                        </div>
+                        <span class="progress-text">{{ this_week }}/10</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="achievement-card {% if this_week > last_week and last_week > 0 %}unlocked{% else %}locked{% endif %}">
+                <div class="achievement-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="achievement-content">
+                    <h4>Improvement Master</h4>
+                    <p>Outperform previous week</p>
+                    <div class="achievement-status">
+                        {% if this_week > last_week and last_week > 0 %}
+                        <span class="status-unlocked">Unlocked!</span>
+                        {% else %}
+                        <span class="status-locked">Beat last week's score</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productivity Tips -->
+    <div class="tips-section">
+        <div class="section-header">
+            <h2><i class="fas fa-lightbulb"></i> Productivity Insights</h2>
+        </div>
+        
+        <div class="tips-grid">
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Peak Performance Time</h4>
+                    <p>Most of your tasks are completed in the morning. Schedule important tasks early!</p>
+                </div>
+            </div>
+            
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-target"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Focus on High Priority</h4>
+                    <p>You have great success with high-priority tasks. Use the Smart Reschedule feature more often!</p>
+                </div>
+            </div>
+            
+            <div class="tip-card">
+                <div class="tip-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="tip-content">
+                    <h4>Consistency is Key</h4>
+                    <p>Try to complete at least 1 task daily to build a strong streak and maintain momentum.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Create daily completion chart
+document.addEventListener('DOMContentLoaded', function() {
+    const dailyData = {{ daily_data | tojson }};
+    console.log('Daily data:', dailyData); // Debug log
+    createDailyChart(dailyData);
+});
+
+function createDailyChart(data) {
+    const canvas = document.getElementById('dailyChart');
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Chart dimensions
+    const chartWidth = canvas.width - 80;
+    const chartHeight = canvas.height - 80;
+    const chartX = 40;
+    const chartY = 20;
+    
+    // Get last 7 days
+    const days = [];
+    const counts = [];
+    
+    // Create array for last 7 days
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        days.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+        
+        // Find matching data
+        const dayData = data.find(d => d.date === dateStr);
+        counts.push(dayData ? dayData.count : 0);
+    }
+    
+    console.log('Days:', days);
+    console.log('Counts:', counts);
+    
+    const maxCount = Math.max(...counts, 1);
+    const barWidth = Math.max(30, (chartWidth / days.length) - 20);
+    const barSpacing = (chartWidth - (barWidth * days.length)) / (days.length + 1);
+    
+    // Set font
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    
+    // Draw bars
+    for (let i = 0; i < days.length; i++) {
+        const barHeight = maxCount > 0 ? (counts[i] / maxCount) * chartHeight : 0;
+        const x = chartX + barSpacing + i * (barWidth + barSpacing);
+        const y = chartY + chartHeight - barHeight;
+        
+        // Draw bar with gradient
+        const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#4f46e5');
+        ctx.fillStyle = gradient;
+        
+        // Draw rounded rectangle
+        drawRoundedRect(ctx, x, y, barWidth, barHeight, 4);
+        ctx.fill();
+        
+        // Draw value on top of bar if there's space
+        if (barHeight > 20) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(counts[i], x + barWidth / 2, y + 15);
+        } else if (counts[i] > 0) {
+            ctx.fillStyle = '#374151';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(counts[i], x + barWidth / 2, y - 8);
+        }
+        
+        // Draw day label
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(days[i], x + barWidth / 2, chartY + chartHeight + 25);
+    }
+    
+    // Draw y-axis labels
+    ctx.fillStyle = '#6b7280';
+    ctx.textAlign = 'right';
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    
+    for (let i = 0; i <= maxCount; i++) {
+        const y = chartY + chartHeight - (i / maxCount) * chartHeight;
+        ctx.fillText(i.toString(), chartX - 10, y + 3);
+    }
+    
+    // Draw grid lines
+    ctx.strokeStyle = '#f3f4f6';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= maxCount; i++) {
+        const y = chartY + chartHeight - (i / maxCount) * chartHeight;
+        ctx.beginPath();
+        ctx.moveTo(chartX, y);
+        ctx.lineTo(chartX + chartWidth, y);
+        ctx.stroke();
+    }
+    
+    // Draw axes
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    // Y-axis
+    ctx.moveTo(chartX, chartY);
+    ctx.lineTo(chartX, chartY + chartHeight);
+    // X-axis
+    ctx.moveTo(chartX, chartY + chartHeight);
+    ctx.lineTo(chartX + chartWidth, chartY + chartHeight);
+    ctx.stroke();
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    if (height < radius) radius = height / 2;
+    if (width < radius) radius = width / 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x, y + height);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+}
+</script>
+{% endblock %}

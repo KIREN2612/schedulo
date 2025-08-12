@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TaskFlow Pro{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_tasks }}</h3>
+                <p>Total Tasks</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ completed_tasks }}</h3>
+                <p>Completed</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-fire"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ streak }}</h3>
+                <p>Day Streak</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ ((completed_tasks / total_tasks * 100) | round(1)) if total_tasks > 0 else 0 }}%</h3>
+                <p>Completion Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <button id="addTaskBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Task
+        </button>
+        <button id="rescheduleBtn" class="btn btn-secondary">
+            <i class="fas fa-calendar-alt"></i> Smart Reschedule
+        </button>
+        <div class="filter-group">
+            <select id="categoryFilter" class="form-select">
+                <option value="">All Categories</option>
+                <option value="work">Work</option>
+                <option value="personal">Personal</option>
+                <option value="health">Health</option>
+                <option value="learning">Learning</option>
+            </select>
+            <select id="statusFilter" class="form-select">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tasks Grid -->
+    <div id="tasksContainer" class="tasks-grid">
+        {% for task in tasks %}
+        <div class="task-card" data-task-id="{{ task.id }}" data-category="{{ task.category }}" data-status="{{ task.status }}">
+            <div class="task-header">
+                <div class="task-priority priority-{{ task.priority }}">
+                    <i class="fas fa-flag"></i>
+                    <span>{{ task.priority.title() }}</span>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-icon edit-task" title="Edit Task">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon delete-task" title="Delete Task">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="task-content">
+                <h3 class="task-title">{{ task.title }}</h3>
+                <p class="task-description">{{ task.description or 'No description' }}</p>
+                
+                <div class="task-meta">
+                    <div class="task-category">
+                        <i class="fas fa-tag"></i>
+                        <span>{{ task.category.title() }}</span>
+                    </div>
+                    {% if task.due_date %}
+                    <div class="task-due-date">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ task.due_date }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="task-footer">
+                <div class="task-status status-{{ task.status }}">
+                    {% if task.status == 'completed' %}
+                    <i class="fas fa-check-circle"></i>
+                    <span>Completed</span>
+                    {% else %}
+                    <i class="fas fa-clock"></i>
+                    <span>Pending</span>
+                    {% endif %}
+                </div>
+                {% if task.status != 'completed' %}
+                <button class="btn btn-success btn-sm complete-task">
+                    <i class="fas fa-check"></i> Complete
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Task Modal -->
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle"><i class="fas fa-plus"></i> Add New Task</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form id="taskForm">
+            <div class="form-group">
+                <label for="taskTitle">Task Title</label>
+                <input type="text" id="taskTitle" name="title" required class="form-input">
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDescription">Description</label>
+                <textarea id="taskDescription" name="description" class="form-textarea" rows="3"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="taskPriority">Priority</label>
+                    <select id="taskPriority" name="priority" class="form-select">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskCategory">Category</label>
+                    <select id="taskCategory" name="category" class="form-select">
+                        <option value="general">General</option>
+                        <option value="work">Work</option>
+                        <option value="personal">Personal</option>
+                        <option value="health">Health</option>
+                        <option value="learning">Learning</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="taskDueDate">Due Date</label>
+                <input type="date" id="taskDueDate" name="due_date" class="form-input">
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dashboard functionality
+let currentEditingTask = null;
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEventListeners();
+    initializeFilters();
+});
+
+function initializeEventListeners() {
+    // Add task button
+    document.getElementById('addTaskBtn').addEventListener('click', openAddTaskModal);
+    
+    // Reschedule button
+    document.getElementById('rescheduleBtn').addEventListener('click', handleReschedule);
+    
+    // Modal controls
+    document.querySelector('.modal-close').addEventListener('click', closeModal);
+    document.querySelector('.modal-cancel').addEventListener('click', closeModal);
+    
+    // Task form submission
+    document.getElementById('taskForm').addEventListener('submit', handleTaskSubmit);
+    
+    // Task actions
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.complete-task')) {
+            handleCompleteTask(e.target.closest('.task-card'));
+        } else if (e.target.closest('.edit-task')) {
+            handleEditTask(e.target.closest('.task-card'));
+        } else if (e.target.closest('.delete-task')) {
+            handleDeleteTask(e.target.closest('.task-card'));
+        }
+    });
+    
+    // Click outside modal to close
+    document.getElementById('taskModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+}
+
+function initializeFilters() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    categoryFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+}
+
+function applyFilters() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const taskCards = document.querySelectorAll('.task-card');
+    
+    taskCards.forEach(card => {
+        const taskCategory = card.dataset.category;
+        const taskStatus = card.dataset.status;
+        
+        const categoryMatch = !categoryFilter || taskCategory === categoryFilter;
+        const statusMatch = !statusFilter || taskStatus === statusFilter;
+        
+        if (categoryMatch && statusMatch) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function openAddTaskModal() {
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Add New Task';
+    document.getElementById('taskForm').reset();
+    currentEditingTask = null;
+    document.getElementById('taskModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('taskModal').style.display = 'none';
+    currentEditingTask = null;
+}
+
+async function handleTaskSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    try {
+        const url = currentEditingTask ? `/api/tasks/${currentEditingTask}` : '/api/tasks';
+        const method = currentEditingTask ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            closeModal();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    }
+}
+
+async function handleCompleteTask(taskCard) {
+    const taskId = taskCard.dataset.taskId;
+    
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'completed' })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Task completed! 🎉', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    }
+}
+
+function handleEditTask(taskCard) {
+    const taskId = taskCard.dataset.taskId;
+    currentEditingTask = taskId;
+    
+    // Get task data from the card
+    const title = taskCard.querySelector('.task-title').textContent;
+    const description = taskCard.querySelector('.task-description').textContent;
+    const priority = taskCard.querySelector('.task-priority').textContent.toLowerCase().trim();
+    const category = taskCard.querySelector('.task-category span').textContent.toLowerCase().trim();
+    
+    // Populate form
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Task';
+    document.getElementById('taskTitle').value = title;
+    document.getElementById('taskDescription').value = description === 'No description' ? '' : description;
+    document.getElementById('taskPriority').value = priority;
+    document.getElementById('taskCategory').value = category;
+    
+    document.getElementById('taskModal').style.display = 'flex';
+}
+
+async function handleDeleteTask(taskCard) {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    
+    const taskId = taskCard.dataset.taskId;
+    
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            taskCard.remove();
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    }
+}
+
+async function handleReschedule() {
+    if (!confirm('This will reschedule all pending tasks. Continue?')) return;
+    
+    try {
+        const response = await fetch('/api/reschedule', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.', 'error');
+    }
+}
+</script>
+{% endblock %}

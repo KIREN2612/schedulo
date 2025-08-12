@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="landing-page">
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <i class="fas fa-rocket"></i>
+                Welcome to TaskFlow Pro
+            </h1>
+            <p class="hero-subtitle">
+                The ultimate task management platform with smart analytics and gamification
+            </p>
+            <div class="hero-features">
+                <div class="feature-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Smart Analytics</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-trophy"></i>
+                    <span>Gamification</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Smart Rescheduling</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">
+                    <i class="fas fa-user-plus"></i> Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary btn-large">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
